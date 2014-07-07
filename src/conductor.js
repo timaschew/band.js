@@ -5,7 +5,7 @@
  *
  * @author Cody Lundquist (http://github.com/meenie) - 2013
  */
-module.exports = BandJS;
+module.exports = Conductor;
 
 var packs = {
         instrument: {},
@@ -14,7 +14,7 @@ var packs = {
     },
     noop = function() {};
 
-function BandJS(tuning, rhythm) {
+function Conductor(tuning, rhythm) {
     if (! tuning) {
         tuning = 'equalTemperament';
     }
@@ -158,7 +158,6 @@ function BandJS(tuning, rhythm) {
 
         conductor.totalDuration = totalDuration;
 
-        console.log('finish');
         return require('./player.js')(conductor);
     };
 
@@ -238,7 +237,7 @@ function BandJS(tuning, rhythm) {
     conductor.setTimeSignature(4, 4);
 }
 
-BandJS.loadPack = function(type, name, data) {
+Conductor.loadPack = function(type, name, data) {
     if (['tuning', 'rhythm', 'instrument'].indexOf(type) === - 1) {
         throw new Error(type = ' is not a valid Pack Type.');
     }
@@ -249,9 +248,3 @@ BandJS.loadPack = function(type, name, data) {
 
     packs[type][name] = data;
 };
-
-BandJS.loadPack('instrument', 'noises', require('./instrument-packs/noises.js'));
-BandJS.loadPack('instrument', 'oscillators', require('./instrument-packs/oscillators.js'));
-BandJS.loadPack('rhythm', 'northAmerican', require('./rhythm-packs/north-american.js'));
-BandJS.loadPack('rhythm', 'european', require('./rhythm-packs/european.js'));
-BandJS.loadPack('tuning', 'equalTemperament', require('./tuning-packs/equal-temperament.js'));

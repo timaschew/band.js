@@ -8,17 +8,17 @@ module.exports = function(conductor) {
         faded = false;
 
     /**
-     * Helper function to stop all sound nodes
-     * then call methods.end() to re-buffer them
+     * Helper function to stop all sound nodes and 
+     * then re-buffers them
      */
     function reset() {
         // Reset the buffer position of all instruments
-        var index = - 1;
+        var index = -1;
         while (++index < conductor.instruments.length) {
             conductor.instruments[index].bufferPosition = 0;
         }
 
-        index = - 1;
+        index = -1;
         while (++index < allSounds.length) {
             allSounds[index].gain.disconnect();
         }
@@ -78,12 +78,12 @@ module.exports = function(conductor) {
         }
 
         var sounds = [];
-        var index = - 1;
+        var index = -1;
         while (++index < conductor.instruments.length) {
             var instrument = conductor.instruments[index];
             // Create volume for this instrument
             var bufferCount = bufferSize;
-            var index2 = - 1;
+            var index2 = -1;
             while (++index2 < bufferCount) {
                 var sound = instrument.sounds[instrument.bufferPosition + index2];
 
@@ -96,7 +96,7 @@ module.exports = function(conductor) {
                     stopTime = sound.stopTime,
                     volumeLevel = sound.volumeLevel;
 
-                if (startTime < totalPlayTime) {
+                if (stopTime < totalPlayTime) {
                     bufferCount ++;
                     continue;
                 }
@@ -111,17 +111,23 @@ module.exports = function(conductor) {
                 gain.connect(conductor.masterVolume);
                 gain.gain.value = volumeLevel;
 
+                // If the startTime is less than total play time, we need to start the note
+                // in the middle
+                if (startTime < totalPlayTime) {
+                    startTime = stopTime - totalPlayTime;
+                }
+
                 // No pitches defined
                 if (typeof pitch === 'undefined') {
                     sounds.push({
-                        startTime: startTime,
+                        startTime: startTime < totalPlayTime ? stopTime - totalPlayTime : startTime,
                         stopTime: stopTime,
                         node: instrument.instrument.createSound(gain),
                         gain: gain,
                         volumeLevel: volumeLevel
                     });
                 } else {
-                    var index3 = - 1;
+                    var index3 = -1;
                     while (++index3 < pitch.length) {
                         var p = pitch[index3];
                         sounds.push({
@@ -194,7 +200,7 @@ module.exports = function(conductor) {
             totalPlayTimeCalculator();
             var timeOffset = conductor.audioContext.currentTime - totalPlayTime,
                 playSounds = function(sounds) {
-                    var index = - 1;
+                    var index = -1;
                     while (++index < sounds.length) {
                         var sound = sounds[index];
                         var startTime = sound.startTime + timeOffset,
@@ -206,7 +212,9 @@ module.exports = function(conductor) {
                          * We also put in a slight ramp down as well.  This only takes up 1/1000 of a second.
                          */
                         if (! sound.tie) {
-                            startTime -= 0.001;
+                            if (startTime > 0) {
+                                startTime -= 0.001;
+                            }
                             stopTime += 0.001;
                             sound.gain.gain.setValueAtTime(0.0, startTime);
                             sound.gain.gain.linearRampToValueAtTime(sound.volumeLevel, startTime + 0.001);

@@ -1,5 +1,6 @@
 var app = angular.module('app', ['ui.bootstrap']);
 app.controller('AppController', function($scope) {
+
     var conductor = new BandJS();
 
     conductor.setTimeSignature(2, 2);

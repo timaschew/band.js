@@ -3,9 +3,14 @@ module.exports = function(grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         browserify: {
+            options: {
+                bundleOptions: {
+                    standalone: '<%= pkg.name %>'
+                }
+            },
             build: {
                 src: 'src/main.js',
-                dest: 'build/<%= pkg.name %>.js'
+                dest: 'dist/band.js'
             }
         },
         uglify: {
@@ -14,8 +19,8 @@ module.exports = function(grunt) {
                 banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %> */\n'
             },
             build: {
-                src: 'build/<%= pkg.name %>.js',
-                dest: 'build/<%= pkg.name %>.min.js'
+                src: 'dist/band.js',
+                dest: 'dist/band.min.js'
             }
         }
     });
