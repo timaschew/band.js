@@ -47,10 +47,10 @@ module.exports = function(name, pack, conductor) {
         return copy;
     }
 
-    var currentTime = 0,
-        lastRepeatCount = 0,
+    var lastRepeatCount = 0,
         volumeLevel = 1,
         definition = {
+            totalDuration: 0,
             bufferPosition: 0,
             instrument: conductor.packs.instrument[pack](name, conductor.audioContext),
             sounds: [],
@@ -97,13 +97,13 @@ module.exports = function(name, pack, conductor) {
                     duration: duration,
                     articulationGap: articulationGap,
                     tie: tie,
-                    startTime: currentTime,
+                    startTime: definition.totalDuration,
                     // Volume needs to be a quarter of the master so it doesn't clip
                     volumeLevel: volumeLevel / 4,
-                    stopTime: currentTime + duration - articulationGap
+                    stopTime: definition.totalDuration + duration - articulationGap
                 });
 
-                currentTime += duration;
+                definition.totalDuration += duration;
 
                 return definition;
             },
@@ -119,11 +119,11 @@ module.exports = function(name, pack, conductor) {
                     pitch: false,
                     duration: duration,
                     articulationGap: 0,
-                    startTime: currentTime,
-                    stopTime: currentTime + duration
+                    startTime: definition.totalDuration,
+                    stopTime: definition.totalDuration + duration
                 });
 
-                currentTime += duration;
+                definition.totalDuration += duration;
 
                 return definition;
             },
@@ -156,11 +156,11 @@ module.exports = function(name, pack, conductor) {
                     while (++index < soundsBufferCopy.length) {
                         var soundCopy = clone(soundsBufferCopy[index]);
 
-                        soundCopy.startTime = currentTime;
-                        soundCopy.stopTime = currentTime + soundCopy.duration - soundCopy.articulationGap;
+                        soundCopy.startTime = definition.totalDuration;
+                        soundCopy.stopTime = definition.totalDuration + soundCopy.duration - soundCopy.articulationGap;
 
                         definition.sounds.push(soundCopy);
-                        currentTime += soundCopy.duration;
+                        definition.totalDuration += soundCopy.duration;
                     }
                 }
 

@@ -14,18 +14,18 @@ module.exports = function(conductor) {
     function reset() {
         // Reset the buffer position of all instruments
         var index = - 1;
-        while (++ index < conductor.instruments.length) {
+        while (++index < conductor.instruments.length) {
             conductor.instruments[index].bufferPosition = 0;
         }
 
         index = - 1;
-        while (++ index < allSounds.length) {
+        while (++index < allSounds.length) {
             allSounds[index].gain.disconnect();
         }
 
         clearTimeout(bufferTimeout);
 
-        bufferSounds();
+        allSounds = bufferSounds();
     }
 
     /**
@@ -43,12 +43,12 @@ module.exports = function(conductor) {
             throw new Error('Direction must be either up or down.');
         }
         faded = direction === 'down';
-        var i = 100 * self.masterVolumeLevel,
+        var i = 100 * conductor.masterVolumeLevel,
             fadeTimer = function() {
                 if (i > 0) {
                     i = i - 4;
                     i = i < 0 ? 0 : i;
-                    var gain = 'up' === direction ? self.masterVolumeLevel * 100 - i : i;
+                    var gain = 'up' === direction ? conductor.masterVolumeLevel * 100 - i : i;
                     conductor.masterVolume.gain.value = gain / 100;
                     requestAnimationFrame(fadeTimer);
                 } else {
@@ -58,7 +58,7 @@ module.exports = function(conductor) {
 
                     if (resetVolume) {
                         faded = ! faded;
-                        conductor.masterVolume.gain.value = self.masterVolumeLevel;
+                        conductor.masterVolume.gain.value = conductor.masterVolumeLevel;
                     }
                 }
             };
@@ -79,12 +79,12 @@ module.exports = function(conductor) {
 
         var sounds = [];
         var index = - 1;
-        while (++ index < conductor.instruments.length) {
+        while (++index < conductor.instruments.length) {
             var instrument = conductor.instruments[index];
             // Create volume for this instrument
             var bufferCount = bufferSize;
             var index2 = - 1;
-            while (++ index2 < bufferCount) {
+            while (++index2 < bufferCount) {
                 var sound = instrument.sounds[instrument.bufferPosition + index2];
 
                 if (typeof sound === 'undefined') {
@@ -122,7 +122,7 @@ module.exports = function(conductor) {
                     });
                 } else {
                     var index3 = - 1;
-                    while (++ index3 < pitch.length) {
+                    while (++index3 < pitch.length) {
                         var p = pitch[index3];
                         sounds.push({
                             startTime: startTime,
@@ -141,19 +141,15 @@ module.exports = function(conductor) {
         return sounds;
     }
 
-    function onFinished(cb) {
-        self.stop(false);
-        if (definitions.loop) {
-            self.play();
-        } else if (typeof cb === 'function') {
-            cb();
-        }
-    }
-
     function totalPlayTimeCalculator() {
-        if (! conductor.paused && conductor.playing) {
+        if (! definitions.paused && definitions.playing) {
             if (conductor.totalDuration < totalPlayTime) {
-                onFinished(conductor.onFinishedCallback);
+                definitions.stop(false);
+                if (definitions.looping) {
+                    definitions.play();
+                } else  {
+                    conductor.onFinishedCallback();
+                }
             } else {
                 updateTotalPlayTime();
                 requestAnimationFrame(totalPlayTimeCalculator);
@@ -199,7 +195,7 @@ module.exports = function(conductor) {
             var timeOffset = conductor.audioContext.currentTime - totalPlayTime,
                 playSounds = function(sounds) {
                     var index = - 1;
-                    while (++ index < sounds.length) {
+                    while (++index < sounds.length) {
                         var sound = sounds[index];
                         var startTime = sound.startTime + timeOffset,
                             stopTime = sound.stopTime + timeOffset;
@@ -326,6 +322,8 @@ module.exports = function(conductor) {
             fade('up', cb);
         }
     };
+
+    allSounds = bufferSounds();
 
     return definitions;
 };

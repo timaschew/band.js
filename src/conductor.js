@@ -151,13 +151,14 @@ function BandJS(tuning, rhythm) {
         var totalDuration = 0;
         while (++index < conductor.instruments.length) {
             var instrument = conductor.instruments[index];
-            if (instrument.duration > totalDuration) {
-                totalDuration = instrument.duration;
+            if (instrument.totalDuration > totalDuration) {
+                totalDuration = instrument.totalDuration;
             }
         }
 
         conductor.totalDuration = totalDuration;
 
+        console.log('finish');
         return require('./player.js')(conductor);
     };
 
