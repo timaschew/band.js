@@ -1,7 +1,7 @@
 /**
  * Oscillator Instrument Pack,
  */
-BandJS.loadPack('instrument', 'noises', function(name, audioContext) {
+module.exports = function(name, audioContext) {
     var types = [
         'white',
         'pink',
@@ -95,4 +95,4 @@ BandJS.loadPack('instrument', 'noises', function(name, audioContext) {
 
         return brownianNoise;
     }
-});
+};

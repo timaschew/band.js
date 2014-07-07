@@ -1,7 +1,7 @@
 /**
  * North American (Canada and USA) rhythm names
  */
-BandJS.loadPack('rhythm', 'northAmerican', {
+module.exports = {
     whole: 1,
     dottedHalf: 0.75,
     half: 0.5,
@@ -16,4 +16,4 @@ BandJS.loadPack('rhythm', 'northAmerican', {
     sixteenth: 0.0625,
     tripletSixteenth: 0.041666667,
     thirtySecond: 0.03125
-});
+};

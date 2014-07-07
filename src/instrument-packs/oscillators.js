@@ -1,7 +1,7 @@
 /**
  * Oscillator Instrument Pack,
  */
-BandJS.loadPack('instrument', 'oscillators', function(name, audioContext) {
+module.exports = function(name, audioContext) {
     var types = {
         sine: 0,
         square: 1,
@@ -27,4 +27,4 @@ BandJS.loadPack('instrument', 'oscillators', function(name, audioContext) {
             return o;
         }
     };
-});
+};

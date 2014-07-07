@@ -1,7 +1,7 @@
 /**
  * European rhythm names
  */
-BandJS.loadPack('rhythm', 'european', {
+module.exports = {
     semibreve: 1,
     dottedMinim: 0.75,
     minim: 0.5,
@@ -16,4 +16,4 @@ BandJS.loadPack('rhythm', 'european', {
     semiquaver: 0.0625,
     tripletSemiquaver: 0.041666667,
     demisemiquaver: 0.03125
-});
+};

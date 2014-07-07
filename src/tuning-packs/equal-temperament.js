@@ -2,7 +2,7 @@
  * Equal Temperament tuning
  * Source: http://www.phy.mtu.edu/~suits/notefreqs.html
  */
-BandJS.loadPack('tuning', 'equalTemperament', {
+module.exports = {
     'C0': 16.35,
     'C#0': 17.32,
     'Db0': 17.32,
@@ -140,4 +140,4 @@ BandJS.loadPack('tuning', 'equalTemperament', {
     'Bb7': 3729.31,
     'B7': 3951.07,
     'C8': 4186.01
-});
+};
