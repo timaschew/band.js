@@ -39,7 +39,7 @@ function Conductor(tuning, rhythm) {
     }
 
     if (! rhythm) {
-        rhythm = 'northAmerican';
+        rhythm = 'numbers';
     }
 
     if (typeof packs.tuning[tuning] === 'undefined') {
@@ -161,9 +161,9 @@ function Conductor(tuning, rhythm) {
      * @param [name] - defaults to sine
      * @param [pack] - defaults to oscillators
      */
-    conductor.createInstrument = function(name, pack) {
+    conductor.createInstrument = function(name, pack, notifyCallback) {
         var Instrument = _dereq_('./instrument.js'),
-            instrument = new Instrument(name, pack, conductor);
+            instrument = new Instrument(name, pack, conductor, notifyCallback);
         conductor.instruments.push(instrument);
 
         return instrument;
@@ -490,7 +490,7 @@ module.exports = Instrument;
  * @param conductor
  * @constructor
  */
-function Instrument(name, pack, conductor) {
+function Instrument(name, pack, conductor, notifyCallback) {
     // Default to Sine Oscillator
     if (! name) {
         name = 'sine';
@@ -537,7 +537,7 @@ function Instrument(name, pack, conductor) {
         return copy;
     }
 
-    
+
     var instrument = this,
         lastRepeatCount = 0,
         volumeLevel = 1,
@@ -547,7 +547,8 @@ function Instrument(name, pack, conductor) {
     instrument.bufferPosition = 0;
     instrument.instrument = conductor.packs.instrument[pack](name, conductor.audioContext);
     instrument.notes = [];
-    
+    instrument.notifyCallback = notifyCallback;
+
     /**
      * Set volume level for an instrument
      *
@@ -713,9 +714,10 @@ module.exports.loadPack('instrument', 'noises', _dereq_('./instrument-packs/nois
 module.exports.loadPack('instrument', 'oscillators', _dereq_('./instrument-packs/oscillators.js'));
 module.exports.loadPack('rhythm', 'northAmerican', _dereq_('./rhythm-packs/north-american.js'));
 module.exports.loadPack('rhythm', 'european', _dereq_('./rhythm-packs/european.js'));
+module.exports.loadPack('rhythm', 'numbers', _dereq_('./rhythm-packs/numbers.js'));
 module.exports.loadPack('tuning', 'equalTemperament', _dereq_('./tuning-packs/equal-temperament.js'));
 
-},{"./conductor.js":2,"./instrument-packs/noises.js":3,"./instrument-packs/oscillators.js":4,"./rhythm-packs/european.js":8,"./rhythm-packs/north-american.js":9,"./tuning-packs/equal-temperament.js":10}],7:[function(_dereq_,module,exports){
+},{"./conductor.js":2,"./instrument-packs/noises.js":3,"./instrument-packs/oscillators.js":4,"./rhythm-packs/european.js":8,"./rhythm-packs/north-american.js":9,"./rhythm-packs/numbers.js":10,"./tuning-packs/equal-temperament.js":11}],7:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
@@ -889,7 +891,8 @@ function Player(conductor) {
                         stopTime: stopTime,
                         node: instrument.instrument.createNote(gain),
                         gain: gain,
-                        volumeLevel: volumeLevel
+                        volumeLevel: volumeLevel,
+                        notifyCallback: instrument.notifyCallback
                     });
                 } else {
                     var index3 = -1;
@@ -900,7 +903,8 @@ function Player(conductor) {
                             stopTime: stopTime,
                             node: instrument.instrument.createNote(gain, conductor.pitches[p.trim()] || parseFloat(p)),
                             gain: gain,
-                            volumeLevel: volumeLevel
+                            volumeLevel: volumeLevel,
+                            notifyCallback: instrument.notifyCallback
                         });
                     }
                 }
@@ -949,7 +953,10 @@ function Player(conductor) {
     player.playing = false;
     player.looping = false;
     player.muted = false;
-    
+
+    function notify(delay, callback) {
+        setTimeout(callback, delay);
+    };
     /**
      * Grabs currently buffered notes and calls their start/stop methods.
      *
@@ -988,6 +995,9 @@ function Player(conductor) {
                         note.gain.gain.linearRampToValueAtTime(0.0, stopTime);
                     }
 
+                    if (note.notifyCallback) {
+                        notify(1000 * (startTime - timeOffset), note.notifyCallback);
+                    }
                     note.node.start(startTime);
                     note.node.stop(stopTime);
                 }
@@ -1175,6 +1185,27 @@ module.exports = {
 };
 
 },{}],10:[function(_dereq_,module,exports){
+/**
+ * Universal Rhythm Pack with numbers instead of strings
+ */
+module.exports = {
+    '1': 1,
+    '2.': 0.75,
+    '2': 0.5,
+    '4.': 0.375,
+    '2^3': 0.33333334,
+    '4': 0.25,
+    '8.': 0.1875,
+    '4^3': 0.166666667,
+    '8': 0.125,
+    '16.': 0.09375,
+    '8^3': 0.083333333,
+    '16': 0.0625,
+    '16^3': 0.041666667,
+    '32': 0.03125
+};
+
+},{}],11:[function(_dereq_,module,exports){
 /**
  * Band.js - Music Composer
  * An interface for the Web Audio API that supports rhythms, multiple instruments, repeating sections, and complex
