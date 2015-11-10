@@ -26,7 +26,7 @@ function Conductor(tuning, rhythm) {
     }
 
     if (! rhythm) {
-        rhythm = 'northAmerican';
+        rhythm = 'numbers';
     }
 
     if (typeof packs.tuning[tuning] === 'undefined') {

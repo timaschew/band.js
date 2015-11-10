@@ -15,4 +15,5 @@ module.exports.loadPack('instrument', 'noises', require('./instrument-packs/nois
 module.exports.loadPack('instrument', 'oscillators', require('./instrument-packs/oscillators.js'));
 module.exports.loadPack('rhythm', 'northAmerican', require('./rhythm-packs/north-american.js'));
 module.exports.loadPack('rhythm', 'european', require('./rhythm-packs/european.js'));
+module.exports.loadPack('rhythm', 'numbers', require('./rhythm-packs/numbers.js'));
 module.exports.loadPack('tuning', 'equalTemperament', require('./tuning-packs/equal-temperament.js'));
