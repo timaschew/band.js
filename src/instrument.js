@@ -15,7 +15,7 @@ module.exports = Instrument;
  * @param conductor
  * @constructor
  */
-function Instrument(name, pack, conductor) {
+function Instrument(name, pack, conductor, notifyCallback) {
     // Default to Sine Oscillator
     if (! name) {
         name = 'sine';
@@ -62,7 +62,7 @@ function Instrument(name, pack, conductor) {
         return copy;
     }
 
-    
+
     var instrument = this,
         lastRepeatCount = 0,
         volumeLevel = 1,
@@ -72,7 +72,8 @@ function Instrument(name, pack, conductor) {
     instrument.bufferPosition = 0;
     instrument.instrument = conductor.packs.instrument[pack](name, conductor.audioContext);
     instrument.notes = [];
-    
+    instrument.notifyCallback = notifyCallback;
+
     /**
      * Set volume level for an instrument
      *

@@ -148,9 +148,9 @@ function Conductor(tuning, rhythm) {
      * @param [name] - defaults to sine
      * @param [pack] - defaults to oscillators
      */
-    conductor.createInstrument = function(name, pack) {
+    conductor.createInstrument = function(name, pack, notifyCallback) {
         var Instrument = require('./instrument.js'),
-            instrument = new Instrument(name, pack, conductor);
+            instrument = new Instrument(name, pack, conductor, notifyCallback);
         conductor.instruments.push(instrument);
 
         return instrument;

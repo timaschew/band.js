@@ -171,7 +171,8 @@ function Player(conductor) {
                         stopTime: stopTime,
                         node: instrument.instrument.createNote(gain),
                         gain: gain,
-                        volumeLevel: volumeLevel
+                        volumeLevel: volumeLevel,
+                        notifyCallback: instrument.notifyCallback
                     });
                 } else {
                     var index3 = -1;
@@ -182,7 +183,8 @@ function Player(conductor) {
                             stopTime: stopTime,
                             node: instrument.instrument.createNote(gain, conductor.pitches[p.trim()] || parseFloat(p)),
                             gain: gain,
-                            volumeLevel: volumeLevel
+                            volumeLevel: volumeLevel,
+                            notifyCallback: instrument.notifyCallback
                         });
                     }
                 }
@@ -231,7 +233,10 @@ function Player(conductor) {
     player.playing = false;
     player.looping = false;
     player.muted = false;
-    
+
+    function notify(delay, callback) {
+        setTimeout(callback, delay);
+    };
     /**
      * Grabs currently buffered notes and calls their start/stop methods.
      *
@@ -270,6 +275,9 @@ function Player(conductor) {
                         note.gain.gain.linearRampToValueAtTime(0.0, stopTime);
                     }
 
+                    if (note.notifyCallback) {
+                        notify(1000 * (startTime - timeOffset), note.notifyCallback);
+                    }
                     note.node.start(startTime);
                     note.node.stop(stopTime);
                 }
