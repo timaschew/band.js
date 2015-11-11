@@ -15,7 +15,7 @@ module.exports = Instrument;
  * @param conductor
  * @constructor
  */
-function Instrument(name, pack, conductor, notifyCallback) {
+function Instrument(name, pack, conductor) {
     // Default to Sine Oscillator
     if (! name) {
         name = 'sine';
@@ -72,7 +72,6 @@ function Instrument(name, pack, conductor, notifyCallback) {
     instrument.bufferPosition = 0;
     instrument.instrument = conductor.packs.instrument[pack](name, conductor.audioContext);
     instrument.notes = [];
-    instrument.notifyCallback = notifyCallback;
 
     /**
      * Set volume level for an instrument
@@ -94,10 +93,9 @@ function Instrument(name, pack, conductor, notifyCallback) {
      * @param [pitch] - Comma separated string if more than one pitch
      * @param [tie]
      */
-    instrument.note = function(rhythm, pitch, tie) {
+    instrument.note = function(rhythm, pitch, tie, notification) {
         var duration = getDuration(rhythm),
             articulationGap = tie ? 0 : duration * articulationGapPercentage;
-
         if (pitch) {
             pitch = pitch.split(',');
             var index = -1;
@@ -112,7 +110,6 @@ function Instrument(name, pack, conductor, notifyCallback) {
                 }
             }
         }
-
         instrument.notes.push({
             rhythm: rhythm,
             pitch: pitch,
@@ -122,7 +119,8 @@ function Instrument(name, pack, conductor, notifyCallback) {
             startTime: instrument.totalDuration,
             stopTime: instrument.totalDuration + duration - articulationGap,
             // Volume needs to be a quarter of the master so it doesn't clip
-            volumeLevel: volumeLevel / 4
+            volumeLevel: volumeLevel / 4,
+            notification: notification
         });
 
         instrument.totalDuration += duration;
@@ -135,7 +133,7 @@ function Instrument(name, pack, conductor, notifyCallback) {
      *
      * @param rhythm
      */
-    instrument.rest = function(rhythm) {
+    instrument.rest = function(rhythm, notification) {
         var duration = getDuration(rhythm);
 
         instrument.notes.push({
@@ -144,7 +142,8 @@ function Instrument(name, pack, conductor, notifyCallback) {
             duration: duration,
             articulationGap: 0,
             startTime: instrument.totalDuration,
-            stopTime: instrument.totalDuration + duration
+            stopTime: instrument.totalDuration + duration,
+            notification: notification
         });
 
         instrument.totalDuration += duration;
