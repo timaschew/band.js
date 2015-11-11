@@ -490,7 +490,7 @@ module.exports = Instrument;
  * @param conductor
  * @constructor
  */
-function Instrument(name, pack, conductor, notifyCallback) {
+function Instrument(name, pack, conductor) {
     // Default to Sine Oscillator
     if (! name) {
         name = 'sine';
@@ -547,7 +547,6 @@ function Instrument(name, pack, conductor, notifyCallback) {
     instrument.bufferPosition = 0;
     instrument.instrument = conductor.packs.instrument[pack](name, conductor.audioContext);
     instrument.notes = [];
-    instrument.notifyCallback = notifyCallback;
 
     /**
      * Set volume level for an instrument
@@ -569,10 +568,9 @@ function Instrument(name, pack, conductor, notifyCallback) {
      * @param [pitch] - Comma separated string if more than one pitch
      * @param [tie]
      */
-    instrument.note = function(rhythm, pitch, tie) {
+    instrument.note = function(rhythm, pitch, tie, notification) {
         var duration = getDuration(rhythm),
             articulationGap = tie ? 0 : duration * articulationGapPercentage;
-
         if (pitch) {
             pitch = pitch.split(',');
             var index = -1;
@@ -587,7 +585,6 @@ function Instrument(name, pack, conductor, notifyCallback) {
                 }
             }
         }
-
         instrument.notes.push({
             rhythm: rhythm,
             pitch: pitch,
@@ -597,7 +594,8 @@ function Instrument(name, pack, conductor, notifyCallback) {
             startTime: instrument.totalDuration,
             stopTime: instrument.totalDuration + duration - articulationGap,
             // Volume needs to be a quarter of the master so it doesn't clip
-            volumeLevel: volumeLevel / 4
+            volumeLevel: volumeLevel / 4,
+            notification: notification
         });
 
         instrument.totalDuration += duration;
@@ -610,7 +608,7 @@ function Instrument(name, pack, conductor, notifyCallback) {
      *
      * @param rhythm
      */
-    instrument.rest = function(rhythm) {
+    instrument.rest = function(rhythm, notification) {
         var duration = getDuration(rhythm);
 
         instrument.notes.push({
@@ -619,7 +617,8 @@ function Instrument(name, pack, conductor, notifyCallback) {
             duration: duration,
             articulationGap: 0,
             startTime: instrument.totalDuration,
-            stopTime: instrument.totalDuration + duration
+            stopTime: instrument.totalDuration + duration,
+            notification: notification
         });
 
         instrument.totalDuration += duration;
@@ -870,7 +869,8 @@ function Player(conductor) {
 
                 // If pitch is false, then it's a rest and we don't need a note
                 if (false === pitch) {
-                    continue;
+                    pitch = ['A4'];
+                    volumeLevel = 0.001;
                 }
 
                 var gain = conductor.audioContext.createGain();
@@ -891,8 +891,7 @@ function Player(conductor) {
                         stopTime: stopTime,
                         node: instrument.instrument.createNote(gain),
                         gain: gain,
-                        volumeLevel: volumeLevel,
-                        notifyCallback: instrument.notifyCallback
+                        volumeLevel: volumeLevel
                     });
                 } else {
                     var index3 = -1;
@@ -904,7 +903,8 @@ function Player(conductor) {
                             node: instrument.instrument.createNote(gain, conductor.pitches[p.trim()] || parseFloat(p)),
                             gain: gain,
                             volumeLevel: volumeLevel,
-                            notifyCallback: instrument.notifyCallback
+                            notification: index3 === 0 ? note.notification : null,
+                            pitch: pitch
                         });
                     }
                 }
@@ -953,10 +953,30 @@ function Player(conductor) {
     player.playing = false;
     player.looping = false;
     player.muted = false;
+    player.notifications = [];
 
-    function notify(delay, callback) {
-        setTimeout(callback, delay);
-    };
+    player.getCurrentNotification = function() {
+        var cleanupIndex = null;
+        var tmp = null;
+        var threshold = 1 / 2000;
+        for (var i=0; i<player.notifications.length; i++) {
+            tmp = player.notifications[i];
+            if (conductor.audioContext.currentTime - threshold >= tmp.startTime &&
+                conductor.audioContext.currentTime + threshold <= tmp.stopTime) {
+                cleanupIndex = i;
+                break;
+            } else {
+                tmp = null;
+            }
+        }
+        // cleanup notes in past
+        if (cleanupIndex != null) {
+             var newArray = player.notifications.slice(cleanupIndex);
+             player.notifications.length = 0;
+             player.notifications = newArray;
+        }
+        return tmp;
+    }
     /**
      * Grabs currently buffered notes and calls their start/stop methods.
      *
@@ -995,9 +1015,15 @@ function Player(conductor) {
                         note.gain.gain.linearRampToValueAtTime(0.0, stopTime);
                     }
 
-                    if (note.notifyCallback) {
-                        notify(1000 * (startTime - timeOffset), note.notifyCallback);
+                    if (note.notification != null) {
+                        player.notifications.push({
+                            content: note.notification,
+                            startTime: startTime,
+                            stopTime: stopTime,
+                            pitch: note.pitch,
+                        });
                     }
+
                     note.node.start(startTime);
                     note.node.stop(stopTime);
                 }
